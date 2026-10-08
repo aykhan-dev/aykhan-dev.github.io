@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Valiyev Games: calm, tactile puzzle games</title>
+<meta name="description" content="Valiyev Games is a small puzzle studio from Baku. We make calm puzzle games for your phone: Duol and Number Cross.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F8DCC9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#050919" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23262A4A'/%3E%3Ctext x='32' y='46' font-family='Arial Rounded MT Bold,Arial' font-weight='700' font-size='40' text-anchor='middle' fill='white'%3EV%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Nunito:wght@700;800&family=Cormorant+Garamond:ital,wght@0,600;1,500&family=Lora:ital@0;1&display=swap">
+<script>document.documentElement.className = 'js'</script>
+<style>
+/* Duol and Sum Sort's element language: raised slabs with a lip, gummy fills, Fredoka and Nunito, squircles.
+   The page is Duol's daybreak world (night in dark mode); each game card keeps its own world. */
+:root {
+  --sky-1: #F8DCC9; --sky-2: #EADCE8; --sky-3: #C6D2F4; --page: #F3F2FA;
+  --ink: #1C1E35; --ink-soft: #4D5172;
+  --card: #FFFFFF; --line: #DFE2F1; --line-deep: #C9CEE6;
+  --frost: rgba(255, 255, 255, 0.78); --frost-edge: rgba(255, 255, 255, 0.95);
+  --shade: rgba(40, 34, 90, 0.38); --lift: 0 12px 22px -14px var(--shade);
+  --red: #F2553E; --blue: #3567F0;
+  --wm-red: #E64B3C; --wm-red-lo: #B9301F; --wm-blue: #3567F0; --wm-blue-lo: #1E3FB0;
+  --cta: #262A4A; --cta-hi: #42477A; --cta-lo: #11132A; --cta-ink: #FFFFFF; --cta-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+  --focus: #3567F0;
+  --display: 'Fredoka', 'Arial Rounded MT Bold', ui-rounded, system-ui, sans-serif;
+  --body: 'Nunito', ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --settle: cubic-bezier(0.16, 1, 0.3, 1);
+  --press: cubic-bezier(0.2, 0, 0, 1);
+}
+/* Legend · night */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sky-1: #050919; --sky-2: #0E1636; --sky-3: #1F2C63; --page: #0A1030;
+    --ink: #EEF1FF; --ink-soft: rgba(226, 231, 255, 0.8);
+    --card: #1A2048; --line: #2C3468; --line-deep: #070A20;
+    --frost: rgba(14, 18, 46, 0.62); --frost-edge: rgba(160, 175, 255, 0.18);
+    --shade: rgba(0, 0, 10, 0.6); --lift: 0 12px 22px -14px var(--shade);
+    --wm-red: #FF7A62; --wm-red-lo: #B22B1C; --wm-blue: #6F95FF; --wm-blue-lo: #1E3FB0;
+    --cta: #EEF1FF; --cta-hi: #FFFFFF; --cta-lo: #B9C1E6; --cta-ink: #10153A; --cta-shadow: none;
+    --focus: #6F95FF;
+  }
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 700 16px/1.5 var(--body); -webkit-font-smoothing: antialiased; }
+h1, h2, h3, p, ul { margin: 0; }
+img, svg { display: block; max-width: 100%; }
+img { height: auto; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.wrap { width: min(100% - 32px, 1080px); margin-inline: auto; }
+.sky { background: linear-gradient(180deg, var(--sky-1), var(--sky-2) 38%, var(--sky-3) 76%, var(--page)); }
+
+/* every rounded rectangle is a squircle where the browser can draw one */
+.sq { border-radius: var(--r); }
+@supports (corner-shape: squircle) { .sq { corner-shape: squircle; border-radius: calc(var(--r) * 1.5); } }
+
+/* ── pieces ── */
+.gummy {
+  color: var(--chip-ink, #FFFFFF);
+  background: linear-gradient(180deg, var(--chip-hi) 0%, var(--chip) 52%, var(--chip-lo) 100%);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.5), inset 0 -3px 0 rgba(0, 0, 0, 0.1), 0 3px 0 var(--chip-lo);
+}
+.c-primary { --chip: var(--cta); --chip-hi: var(--cta-hi); --chip-lo: var(--cta-lo); --chip-ink: var(--cta-ink); }
+.c-red { --chip: #E8473A; --chip-hi: #FF7A62; --chip-lo: #B22B1C; }
+.c-blue { --chip: #3567F0; --chip-hi: #6F95FF; --chip-lo: #1E3FB0; }
+.c-gold { --chip: #F0A532; --chip-hi: #FFD06B; --chip-lo: #C98516; }
+
+.cta {
+  --r: 18px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 56px; padding: 14px 24px;
+  font: 700 18px var(--display); text-decoration: none;
+  text-shadow: var(--cta-shadow);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.5), inset 0 -3px 0 rgba(0, 0, 0, 0.1), 0 5px 0 var(--chip-lo),
+    0 14px 20px -12px color-mix(in srgb, var(--chip-lo) 75%, transparent);
+  transition: transform 0.12s var(--press), box-shadow 0.12s var(--press);
+}
+.cta svg { width: 22px; height: 22px; flex: none; }
+.cta:hover { transform: translateY(-1px); }
+.cta:active { transform: translateY(4px); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.5), inset 0 -3px 0 rgba(0, 0, 0, 0.1), 0 1px 0 var(--chip-lo); }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 48px; padding: 0 18px; border-radius: 999px;
+  font: 800 14px var(--body); text-decoration: none;
+  background: var(--card); border: 1px solid var(--line); box-shadow: 0 2px 0 var(--line-deep);
+  transition: transform 0.12s var(--press), box-shadow 0.12s var(--press);
+}
+.chip:hover { transform: translateY(-1px); }
+.chip:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--line-deep); }
+
+.pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px; border-radius: 999px;
+  font: 800 13px var(--body); color: var(--ink);
+  background: var(--frost); border: 1px solid var(--frost-edge);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.dot { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45), inset 0 -2px 0 rgba(0, 0, 0, 0.12); }
+.dot.r { background: var(--red); }
+.dot.b { background: var(--blue); margin-left: -13px; }
+
+.eyebrow { font: 800 12px/1.2 var(--body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
+h2 { margin-top: 10px; font: 700 clamp(32px, 5vw, 44px)/1.08 var(--display); text-wrap: balance; }
+.r-word { color: var(--wm-red); text-shadow: 0 0.055em 0 var(--wm-red-lo); }
+.b-word { color: var(--wm-blue); text-shadow: 0 0.055em 0 var(--wm-blue-lo); }
+
+/* ── header ── */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 14px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; min-height: 48px; text-decoration: none; }
+.mark { --r: 12px; width: 40px; height: 40px; display: grid; place-items: center; font: 700 23px/1 var(--display); text-shadow: var(--cta-shadow); }
+.brand-name { font: 700 21px/1 var(--display); }
+.brand-name span { font-weight: 600; color: var(--ink-soft); }
+
+/* ── hero ── */
+.hero { display: grid; gap: 44px; align-items: center; padding: 36px 0 80px; }
+h1 { margin-top: 20px; font: 700 clamp(40px, 7vw, 64px)/1.04 var(--display); text-wrap: balance; }
+.lede { margin-top: 20px; max-width: 32em; font: 700 18px/1.55 var(--body); color: var(--ink-soft); }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 24px; margin-top: 30px; }
+.more { display: inline-flex; align-items: center; gap: 6px; min-height: 48px; font: 800 15px var(--body); text-decoration: none; }
+.more svg { width: 20px; transition: transform 0.3s var(--settle); }
+.more:hover svg { transform: translateY(3px); }
+@media (min-width: 880px) { .hero { grid-template-columns: 1.25fr 0.75fr; padding: 64px 0 112px; } }
+
+/* the tiny Duol board: one swipe, two orbs */
+.play-area { display: grid; justify-items: center; gap: 22px; }
+.hint { min-height: 40px; padding-inline: 16px; font-size: 14px; transition: opacity 0.16s ease; }
+.hint.swap { opacity: 0; }
+.hint svg { width: 18px; transition: transform 0.4s var(--settle); }
+.hint[data-dir='left'] svg { transform: rotate(180deg); }
+.board {
+  --c: 58px; --g: 8px; --p: 14px; --r: 26px;
+  position: relative; display: grid; grid-template-columns: repeat(4, var(--c)); grid-auto-rows: var(--c); gap: var(--g); padding: var(--p);
+  background: linear-gradient(180deg, #F3F2FC, #E2E2F4);
+  box-shadow: inset 0 2px 0 #FFFFFF, 0 8px 0 #BFC3E0, 0 34px 44px -26px rgba(28, 22, 80, 0.6);
+  rotate: -4deg; touch-action: pan-y; cursor: grab; -webkit-user-select: none; user-select: none;
+}
+.board:active { cursor: grabbing; }
+@media (min-width: 880px) { .board { --c: 68px; --g: 10px; --p: 18px; --r: 30px; } }
+.cell { --r: 14px; background: #FFFFFF; box-shadow: inset 0 -3px 0 rgba(40, 34, 90, 0.07); }
+.ring { display: grid; place-items: center; }
+.ring::after {
+  content: ''; width: 62%; aspect-ratio: 1; border-radius: 50%;
+  border: calc(var(--c) * 0.085) solid var(--rc);
+  background: radial-gradient(circle, var(--rc) 0 17%, transparent 19%);
+}
+.ring.r { --rc: #F2553E; background: #FFF0EC; }
+.ring.b { --rc: #3567F0; background: #EDF1FF; }
+.wall { background: linear-gradient(180deg, #42477A, #262A4A 52%, #11132A); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.22), 0 4px 0 #0B0D20; }
+.orb {
+  position: absolute; left: var(--p); top: calc(var(--p) + var(--y) * (var(--c) + var(--g)));
+  width: var(--c); height: var(--c); display: grid; place-items: center; pointer-events: none;
+  transform: translateX(calc(var(--x, 0) * (var(--c) + var(--g))));
+  transition: transform 0.5s cubic-bezier(0.45, 0, 0.2, 1);
+}
+.orb.r { --hi: #FF8B6B; --base: #F2553E; --lo: #B9301F; }
+.orb.b { --hi: #7FA2FF; --base: #3567F0; --lo: #1E3FB0; }
+.ball {
+  position: relative; z-index: 1; width: 64%; aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle at 36% 30%, var(--hi), var(--base) 55%, var(--lo));
+  box-shadow: 0 calc(var(--c) * 0.1) calc(var(--c) * 0.12) calc(var(--c) * -0.06) rgba(28, 30, 53, 0.45);
+}
+.ball::after { content: ''; position: absolute; left: 22%; top: 14%; width: 30%; height: 20%; border-radius: 50%; background: rgba(255, 255, 255, 0.75); rotate: -25deg; }
+/* the motion trail, as on the app icon */
+.orb::before {
+  content: ''; position: absolute; top: 40%; right: 50%; width: 120%; height: 20%; border-radius: 99px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--base) 65%, transparent));
+  opacity: 0; transition: opacity 0.3s ease;
+}
+.orb[data-dir='left']::before { right: auto; left: 50%; background: linear-gradient(270deg, transparent, color-mix(in srgb, var(--base) 65%, transparent)); }
+.orb.rolling::before { opacity: 1; }
+
+/* ── games ── */
+.section { padding: 64px 0; }
+.games { display: grid; gap: 32px; margin-top: 32px; }
+.game {
+  --r: 32px;
+  display: grid; gap: 28px; padding: 26px 22px; color: var(--ink);
+  border: 1px solid var(--frost-edge);
+  box-shadow: 0 6px 0 var(--line-deep), 0 30px 50px -30px var(--shade);
+}
+.game-head { display: flex; align-items: center; gap: 16px; }
+.icon { --r: 20px; width: 76px; height: 76px; flex: none; box-shadow: 0 4px 0 var(--line-deep), var(--lift); }
+.wm { font: 700 48px/1 var(--display); }
+.duol .wm { rotate: -4deg; }
+.store { margin-top: 8px; font: 800 13px var(--body); color: var(--ink-soft); }
+.desc { margin-top: 20px; max-width: 32em; font: 700 16.5px/1.55 var(--body); color: var(--ink-soft); }
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; padding: 0; list-style: none; }
+.game .actions { margin-top: 26px; }
+.soon { display: inline-flex; align-items: center; gap: 8px; font: 800 14px var(--body); color: var(--ink-soft); }
+.soon::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor; opacity: 0.55; }
+.shots { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(8px, 2vw, 16px); align-items: center; padding: 16px 4px 6px; }
+.shot {
+  --r: clamp(12px, 2.2vw, 22px); width: 100%;
+  border: 3px solid var(--card); background: var(--card);
+  box-shadow: 0 4px 0 var(--line-deep), var(--lift);
+  transition: transform 0.45s var(--settle);
+}
+.shot:nth-child(1) { transform: rotate(-4deg) translateY(10px); }
+.shot:nth-child(2) { position: relative; z-index: 1; transform: translateY(-10px) scale(1.06); }
+.shot:nth-child(3) { transform: rotate(4deg) translateY(10px); }
+@media (hover: hover) {
+  .shots:hover .shot:nth-child(1) { transform: rotate(-7deg) translate(-8px, 8px); }
+  .shots:hover .shot:nth-child(2) { transform: translateY(-18px) scale(1.09); }
+  .shots:hover .shot:nth-child(3) { transform: rotate(7deg) translate(8px, 8px); }
+}
+@media (min-width: 880px) {
+  .game { grid-template-columns: 1fr 1fr; align-items: center; gap: 48px; padding: 48px; }
+  .game.flip .info { order: 2; }
+}
+
+/* Duol: daybreak (dusk in dark mode) */
+.duol { background: linear-gradient(160deg, #F8DCC9, #EADCE8 48%, #C6D2F4); }
+.duol .wm span:first-child { color: var(--wm-red); text-shadow: 0 0.055em 0 var(--wm-red-lo), 0 0.16em 0.2em rgba(185, 48, 31, 0.28); }
+.duol .wm span:last-child { color: var(--wm-blue); text-shadow: 0 0.055em 0 var(--wm-blue-lo), 0 0.16em 0.2em rgba(30, 63, 176, 0.28); }
+@media (prefers-color-scheme: dark) {
+  .duol {
+    --ink: #FFF6F0; --ink-soft: rgba(255, 238, 230, 0.82);
+    --card: #2E2858; --line: #463F7C; --line-deep: #140F2E;
+    --frost: rgba(32, 24, 66, 0.5); --frost-edge: rgba(255, 255, 255, 0.16);
+    --cta: #FFF6F0; --cta-hi: #FFFFFF; --cta-lo: #D8C2CB; --cta-ink: #221B45;
+    --shade: rgba(10, 4, 30, 0.6); --lift: 0 12px 22px -14px var(--shade);
+    background: linear-gradient(160deg, #2A2756, #4B3A78 55%, #6E4B86);
+  }
+}
+/* Number Cross keeps its own world, as on its store page: pencil and paper on a dark desk, in both modes */
+.numcross {
+  --ink: #F5EFE3; --ink-soft: rgba(245, 239, 227, 0.76); --gold: #C9963F;
+  --line-deep: #0E0D0C; --shade: rgba(0, 0, 0, 0.55); --frost-edge: rgba(245, 239, 227, 0.14);
+  --focus: #C9963F;
+  --serif: 'Cormorant Garamond', Georgia, serif; --book: 'Lora', Georgia, serif;
+  background: linear-gradient(160deg, #2E2A26, #201F1D);
+}
+.numcross .icon { box-shadow: 3px 3px 0 var(--line-deep); }
+.numcross .wm { font: 600 clamp(34px, 9vw, 46px)/1 var(--serif); }
+.numcross .wm em { color: var(--gold); font-weight: 500; }
+.numcross .wm::after { content: ''; display: block; width: 44px; height: 2px; margin-top: 10px; background: var(--gold); }
+.numcross .store { font: italic 400 15px var(--book); }
+.numcross .desc { font: 400 16.5px/1.65 var(--book); }
+.numcross .tags .pill { background: none; border: 1px dashed rgba(245, 239, 227, 0.45); -webkit-backdrop-filter: none; backdrop-filter: none; font: italic 400 14px var(--book); }
+.numcross .shot { border: 1px solid rgba(245, 239, 227, 0.22); border-radius: 12px; box-shadow: 4px 4px 0 var(--line-deep); }
+/* its button: a pencil-drawn box that hatches under the finger */
+.sketch {
+  display: inline-flex; align-items: center; min-height: 52px; padding: 8px 26px;
+  font: 600 21px var(--serif); color: #201F1D; text-decoration: none;
+  background: #F8F7F5; border: 1.5px solid #201F1D;
+  border-radius: 14px 4px 16px 5px / 5px 16px 4px 14px;
+  box-shadow: 3px 3px 0 var(--gold);
+  transition: transform 0.12s var(--press), box-shadow 0.12s var(--press);
+}
+.sketch:hover { background-image: repeating-linear-gradient(-48deg, rgba(160, 111, 36, 0.4) 0 1px, transparent 1px 6px); }
+.sketch:active { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--gold); }
+
+/* ── how we make them ── */
+.values { display: grid; gap: 18px; margin-top: 32px; padding: 0; list-style: none; }
+@media (min-width: 760px) { .values { grid-template-columns: repeat(3, 1fr); } }
+.card { --r: 24px; padding: 24px; background: var(--card); border: 1px solid var(--line); box-shadow: 0 4px 0 var(--line-deep), var(--lift); }
+.card h3 { margin-top: 18px; font: 600 20px/1.2 var(--display); }
+.card p { margin-top: 8px; font: 700 15px/1.55 var(--body); color: var(--ink-soft); }
+.gum { --r: 14px; width: 48px; height: 48px; display: grid; place-items: center; }
+.gum svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 0 rgba(10, 10, 40, 0.25)); }
+
+/* ── contact and footer ── */
+.contact { display: grid; gap: 22px; justify-items: start; padding: 30px 24px; }
+.contact p { margin-top: 10px; max-width: 30em; font: 700 16.5px/1.55 var(--body); color: var(--ink-soft); }
+.contact .cta { font-size: 17px; overflow-wrap: anywhere; }
+@media (min-width: 760px) { .contact { grid-template-columns: 1fr auto; align-items: center; padding: 44px 48px; } }
+footer { padding: 24px 0 40px; font: 700 14px var(--body); color: var(--ink-soft); }
+footer .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 24px; }
+footer nav { display: flex; flex-wrap: wrap; gap: 0 20px; }
+footer a { display: inline-flex; align-items: center; min-height: 48px; text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* ── motion: earned, and off for reduced motion ── */
+@media (prefers-reduced-motion: no-preference) {
+  .js .reveal { opacity: 0; translate: 0 18px; transition: opacity 0.5s var(--settle), translate 0.6s var(--settle); transition-delay: calc(var(--i, 0) * 70ms); }
+  .js .reveal.in { opacity: 1; translate: 0 0; }
+  .hint svg { animation: nudge 1.8s var(--settle) infinite; }
+  @keyframes nudge { 0%, 55%, 100% { translate: 0 0; } 25% { translate: 4px 0; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .orb, .orb::before, .shot, .cta, .chip { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="sky">
+  <header class="top wrap">
+    <a class="brand" href="#top" aria-label="Valiyev Games, home">
+      <span class="mark sq gummy c-primary" aria-hidden="true">V</span>
+      <span class="brand-name">Valiyev <span>Games</span></span>
+    </a>
+    <a class="chip" href="#contact">Contact</a>
+  </header>
+
+  <section class="hero wrap" id="top">
+    <div class="reveal">
+      <span class="pill" style="color: var(--ink-soft)"><span class="dot r"></span><span class="dot b"></span>A small puzzle studio in Baku</span>
+      <h1>One simple rule.<br><span class="r-word">Hundreds</span> <span class="b-word">of ahas.</span></h1>
+      <p class="lede">We make calm puzzle games for your phone. Each one has a single rule, a look of its own, and an aha waiting in every level.</p>
+      <div class="actions">
+        <a class="cta sq gummy c-primary" href="https://play.google.com/store/apps/details?id=v.games.duol">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 4.6v14.8a1 1 0 0 0 1.5.86l12.3-7.4a1 1 0 0 0 0-1.72L8.5 3.74A1 1 0 0 0 7 4.6Z"/></svg>
+          Get Duol on Google Play
+        </a>
+        <a class="more" href="#games">See our games <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg></a>
+      </div>
+    </div>
+
+    <div class="play-area reveal" style="--i: 2">
+      <p class="pill hint" id="hint" data-dir="right" aria-live="polite">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        <span>Swipe right</span>
+      </p>
+      <div class="board sq" id="board" role="button" tabindex="0" aria-label="A tiny Duol board. Swipe, tap or use the arrow keys to roll both orbs.">
+        <span class="cell sq"></span><span class="cell sq"></span><span class="cell sq"></span><span class="cell sq ring r" data-glow="242,85,62"></span>
+        <span class="cell sq"></span><span class="cell sq"></span><span class="cell sq ring b" data-glow="53,103,240"></span><span class="cell sq wall"></span>
+        <span class="orb r" style="--y: 0"><span class="ball"></span></span>
+        <span class="orb b" style="--y: 1"><span class="ball"></span></span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<main>
+  <section class="section wrap" id="games">
+    <p class="eyebrow">Our games</p>
+    <h2>Pick a puzzle</h2>
+    <div class="games">
+      <article class="game duol sq reveal">
+        <div class="info">
+          <div class="game-head">
+            <img class="icon sq" src="img/duol-icon.webp" width="256" height="256" alt="The Duol app icon">
+            <div>
+              <h3 class="wm"><span>Du</span><span>ol</span></h3>
+              <p class="store">Dual puzzle · Android</p>
+            </div>
+          </div>
+          <p class="desc">One swipe moves two orbs, the red one and the blue one. Land each in the ring of its own colour. Walls stop them, pits swallow them, and if they crash into each other, they burst.</p>
+          <ul class="tags">
+            <li class="pill">600 levels</li><li class="pill">3 chapters</li><li class="pill">Hints and freezers</li><li class="pill">12 languages</li>
+          </ul>
+          <div class="actions">
+            <a class="cta sq gummy c-primary" href="https://play.google.com/store/apps/details?id=v.games.duol">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 4.6v14.8a1 1 0 0 0 1.5.86l12.3-7.4a1 1 0 0 0 0-1.72L8.5 3.74A1 1 0 0 0 7 4.6Z"/></svg>
+              Get it on Google Play
+            </a>
+            <span class="soon">App Store soon</span>
+          </div>
+        </div>
+        <div class="shots">
+          <img class="shot sq" src="img/duol-1.webp" width="540" height="960" loading="lazy" decoding="async" alt="Duol: one swipe moves both orbs toward their rings">
+          <img class="shot sq" src="img/duol-2.webp" width="540" height="960" loading="lazy" decoding="async" alt="Duol: two boards move with a single swipe">
+          <img class="shot sq" src="img/duol-3.webp" width="540" height="960" loading="lazy" decoding="async" alt="Duol: a night-time Legend level">
+        </div>
+      </article>
+
+      <article class="game numcross flip sq reveal">
+        <div class="info">
+          <div class="game-head">
+            <img class="icon sq" src="img/numcross-icon.webp" width="256" height="256" alt="The Number Cross app icon">
+            <div>
+              <h3 class="wm">Number <em>Cross</em></h3>
+              <p class="store">Fill-in puzzle · Android</p>
+            </div>
+          </div>
+          <p class="desc">A crossword where every answer is a number, and the numbers are already in your hand. Place each one where it fits and watch the crossings fill in. No arithmetic, just logic.</p>
+          <ul class="tags">
+            <li class="pill">Fifty puzzles in five books</li><li class="pill">A fresh grid every day</li><li class="pill">No ads</li>
+          </ul>
+          <div class="actions">
+            <a class="sketch" href="https://play.google.com/store/apps/details?id=v.business.numcross">Get it on Google Play</a>
+          </div>
+        </div>
+        <div class="shots">
+          <img class="shot" src="img/numcross-1.webp" width="540" height="960" loading="lazy" decoding="async" alt="Number Cross: crossword logic, with numbers">
+          <img class="shot" src="img/numcross-2.webp" width="540" height="960" loading="lazy" decoding="async" alt="Number Cross: every number reads both ways">
+          <img class="shot" src="img/numcross-3.webp" width="540" height="960" loading="lazy" decoding="async" alt="Number Cross: a fresh grid every day">
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section wrap">
+    <p class="eyebrow">How we make them</p>
+    <h2>Small games, made carefully</h2>
+    <ul class="values">
+      <li class="card sq reveal">
+        <span class="gum sq gummy c-red"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.7 2.7L16.2 9.6"/></svg></span>
+        <h3>One rule, real thought</h3>
+        <p>Each game rests on one rule you learn in a minute, then grows into puzzles that take real thought.</p>
+      </li>
+      <li class="card sq reveal" style="--i: 1">
+        <span class="gum sq gummy c-blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.2-1L19 8.2 15.8 5 5 15.8 4 20Z"/><path d="m13.8 7 3.2 3.2"/></svg></span>
+        <h3>Each with its own feel</h3>
+        <p>Soft 3D orbs that roll and burst, or pencil lines on paper: every game gets a look made just for it.</p>
+      </li>
+      <li class="card sq reveal" style="--i: 2">
+        <span class="gum sq gummy c-gold"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+        <h3>Your progress stays yours</h3>
+        <p>No sign-up and no account. Your progress stays on your phone.</p>
+      </li>
+    </ul>
+  </section>
+
+  <section class="section wrap" id="contact">
+    <div class="card contact sq reveal">
+      <div>
+        <h2>Say hello</h2>
+        <p>Support, partnerships or press: write to us and a real person will answer.</p>
+      </div>
+      <a class="cta sq gummy c-primary" href="mailto:valiyevs.business@gmail.com">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>
+        valiyevs.business@gmail.com
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>© 2026 Valiyev Games · Baku, Azerbaijan</p>
+    <nav aria-label="Legal">
+      <a href="https://polar-swift-d8e.notion.site/DUOL-Privacy-Policy-3f0313fe27a581f2bfe5c34f92fde95e">Duol privacy policy</a>
+      <a href="https://polar-swift-d8e.notion.site/DUOL-Terms-of-Use-3f0313fe27a58198b2bfe6e37db997c1">Duol terms of use</a>
+      <a href="https://app.notion.com/p/Number-Cross-Privacy-Policy-3d3313fe27a580c8a993f2c7f8154e10">Number Cross privacy policy</a>
+    </nav>
+  </div>
+</footer>
+
+<script>
+const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SETTLE = 'cubic-bezier(0.16, 1, 0.3, 1)';
+
+const io = new IntersectionObserver(entries => entries.forEach(e => {
+  if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+}), { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+// The hero board plays Duol's one rule: a swipe rolls both orbs until something stops them.
+const board = document.getElementById('board'), hint = document.getElementById('hint');
+const orbs = [...board.querySelectorAll('.orb')], rings = [...board.querySelectorAll('.ring')];
+const STOPS = { right: [3, 2], left: [0, 0] }; // red reaches its ring at the edge; the wall stops blue on its own
+let side = 'left', busy = false;
+
+function say(text, next) {
+  hint.classList.add('swap');
+  setTimeout(() => { hint.lastElementChild.textContent = text; hint.dataset.dir = next; hint.classList.remove('swap'); }, still ? 0 : 160);
+}
+
+function settle(dir) {
+  busy = false;
+  if (dir === 'left') return say('Swipe right', 'right');
+  if (!still) rings.forEach(r => r.animate(
+    [{ boxShadow: `0 0 0 0 rgba(${r.dataset.glow}, 0.55)` }, { boxShadow: `0 0 0 18px rgba(${r.dataset.glow}, 0)` }],
+    { duration: 750, easing: SETTLE }));
+  say('Both orbs home!', 'left');
+}
+
+function roll(dir) {
+  if (busy) return;
+  if (dir === side) { // already against the edge: the board just bumps
+    if (!still) board.animate([{ translate: '0 0' }, { translate: dir === 'right' ? '6px 0' : '-6px 0' }, { translate: '0 0' }], { duration: 300, easing: 'ease-out' });
+    return;
+  }
+  busy = true; side = dir;
+  let moving = orbs.length;
+  orbs.forEach((o, i) => {
+    const land = () => {
+      o.classList.remove('rolling');
+      if (!still) o.firstElementChild.animate([{ scale: '1.16 0.84' }, { scale: '1' }], { duration: 450, easing: SETTLE });
+      if (!--moving) settle(dir);
+    };
+    o.dataset.dir = dir;
+    o.style.transitionDuration = `${160 + STOPS.right[i] * 120}ms`; // same speed, so the shorter roll lands first
+    o.style.setProperty('--x', STOPS[dir][i]);
+    if (still) return land();
+    o.classList.add('rolling');
+    o.addEventListener('transitionend', function end(e) {
+      if (e.propertyName !== 'transform' || e.pseudoElement) return;
+      o.removeEventListener('transitionend', end);
+      land();
+    });
+  });
+}
+
+const other = () => (side === 'left' ? 'right' : 'left');
+let x0 = null;
+board.addEventListener('pointerdown', e => { x0 = e.clientX; board.setPointerCapture(e.pointerId); });
+board.addEventListener('pointerup', e => {
+  if (x0 === null) return;
+  const dx = e.clientX - x0; x0 = null;
+  roll(Math.abs(dx) < 10 ? other() : dx > 0 ? 'right' : 'left');
+});
+board.addEventListener('pointercancel', () => { x0 = null; });
+board.addEventListener('keydown', e => {
+  const dir = { ArrowRight: 'right', ArrowLeft: 'left', Enter: other(), ' ': other() }[e.key];
+  if (dir) { e.preventDefault(); roll(dir); }
+});
+</script>
+</body>
+</html>
