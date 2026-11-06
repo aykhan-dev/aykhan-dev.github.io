@@ -231,3 +231,5 @@ openx.com, 561470659, RESELLER, 6a698e2ec38604c6
 rubiconproject.com, 28409, RESELLER, 0bfd66d529a55807
 # InMobi (bids in LevelPlay)
 inmobi.com, 98d95e8616e745329879ec10fa2cd0ae, DIRECT, 83e75a7ae333ca9d
+# Liftoff Monetize
+vungle.com, 6aeddd55008cfe5bdcf0893d, DIRECT, c107d686becd2d77
